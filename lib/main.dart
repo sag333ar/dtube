@@ -1,12 +1,12 @@
 import 'dart:developer';
-
+import 'package:dtube/dtube_app.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(const MyApp());
+  runApp(const DTubeApp());
 }
-
+/*
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -99,3 +99,5 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+ */
