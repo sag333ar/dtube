@@ -1,7 +1,14 @@
 import 'package:dtube/models/new_videos_feed/safe_convert.dart';
+import 'dart:convert';
 
 // final jsonList = json.decode(jsonStr) as List;
 // final list = jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
+
+List<NewVideosResponseModelItem> decodeStringOfVideos(String jsonString) {
+  final jsonList = json.decode(jsonString) as List;
+  final list = jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
+  return list;
+}
 
 class NewVideosResponseModelItem {
   final String id;
