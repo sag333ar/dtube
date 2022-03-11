@@ -11,17 +11,30 @@ class HomeWidget extends StatefulWidget {
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
-
   Future<List<NewVideosResponseModelItem>> loadNewVideos() async {
     var request = http.Request('GET', Uri.parse('https://avalon.d.tube/new'));
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
       var responseValue = await response.stream.bytesToString();
-      List<NewVideosResponseModelItem> items = decodeStringOfVideos(responseValue);
+      List<NewVideosResponseModelItem> items =
+          decodeStringOfVideos(responseValue);
       return items;
-    }  else {
+    } else {
       log(response.reasonPhrase ?? 'Status code not 200');
       throw response.reasonPhrase ?? 'Status code not 200';
+    }
+  }
+
+  String getVideoThumbnailUrl(NewVideosResponseModelItem item) {
+    if (item.json.thumbnailUrl.isNotEmpty) {
+      return item.json.thumbnailUrl;
+    } else if (item.json.thumbnailUrlExternal.isNotEmpty) {
+      return item.json.thumbnailUrlExternal;
+    } else if (item.json.files.youtube.isNotEmpty) {
+      // https://img.youtube.com/vi/oUROV_R_ymE/0.jpg
+      return "https://img.youtube.com/vi/${item.json.files.youtube}/0.jpg";
+    } else {
+      return "";
     }
   }
 
@@ -35,14 +48,31 @@ class _HomeWidgetState extends State<HomeWidget> {
         future: loadNewVideos(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Text('An Error occured. ${snapshot.error?.toString() ?? 'Unknown Error'}');
+            return Text(
+                'An Error occured. ${snapshot.error?.toString() ?? 'Unknown Error'}');
           } else if (snapshot.hasData) {
-            var responseItems = snapshot.data as List<NewVideosResponseModelItem>;
+            var responseItems =
+                snapshot.data as List<NewVideosResponseModelItem>;
             return ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
-                    title: Text(responseItems[index].json.title),
-                    leading: Image.asset('images/dtube_logo.png'),
+                    title: Column(
+                      children: [
+                        SizedBox(
+                          height: 180,
+                          width: MediaQuery.of(context).size.width - 20,
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'images/not_found_thumb.png',
+                            image: getVideoThumbnailUrl(responseItems[index]),
+                            imageErrorBuilder: (context, error, trace) {
+                              return Image.asset('images/not_found_thumb.png');
+                            },
+                            fit: BoxFit.fitWidth,
+                          ),
+                        ),
+                        Text(responseItems[index].json.title),
+                      ],
+                    ),
                   );
                 },
                 separatorBuilder: (BuildContext context, int index) {
@@ -55,7 +85,9 @@ class _HomeWidgetState extends State<HomeWidget> {
                 children: const [
                   Spacer(),
                   CircularProgressIndicator(),
-                  SizedBox(height: 10,),
+                  SizedBox(
+                    height: 10,
+                  ),
                   Text('Loading Data'),
                   Spacer(),
                 ],
