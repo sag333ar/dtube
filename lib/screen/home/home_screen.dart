@@ -31,7 +31,6 @@ class _HomeWidgetState extends State<HomeWidget> {
     } else if (item.json.thumbnailUrlExternal.isNotEmpty) {
       return item.json.thumbnailUrlExternal;
     } else if (item.json.files.youtube.isNotEmpty) {
-      // https://img.youtube.com/vi/oUROV_R_ymE/0.jpg
       return "https://img.youtube.com/vi/${item.json.files.youtube}/0.jpg";
     } else {
       return "";
@@ -56,11 +55,12 @@ class _HomeWidgetState extends State<HomeWidget> {
             return ListView.separated(
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
+                    contentPadding: EdgeInsets.zero,
                     title: Column(
                       children: [
                         SizedBox(
-                          height: 180,
-                          width: MediaQuery.of(context).size.width - 20,
+                          height: 240,
+                          width: MediaQuery.of(context).size.width,
                           child: FadeInImage.assetNetwork(
                             placeholder: 'images/not_found_thumb.png',
                             image: getVideoThumbnailUrl(responseItems[index]),
@@ -70,7 +70,34 @@ class _HomeWidgetState extends State<HomeWidget> {
                             fit: BoxFit.fitWidth,
                           ),
                         ),
-                        Text(responseItems[index].json.title),
+                        Container(
+                          margin: const EdgeInsets.all(5),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundImage: Image.network(
+                                        'https://avalon.d.tube/image/avatar/${responseItems[index].author}/small')
+                                    .image,
+                              ),
+                              const SizedBox(width: 5),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(responseItems[index].json.title,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText1),
+                                    Text('${responseItems[index].author}, DTC ${responseItems[index].dist}, ${responseItems[index].json.tag}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyText2)
+                                  ],
+                                ),
+                              )
+                            ],
+                          ),
+                        )
                       ],
                     ),
                   );
