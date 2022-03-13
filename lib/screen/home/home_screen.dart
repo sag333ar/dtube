@@ -143,13 +143,39 @@ class _HomeWidgetState extends State<HomeWidget> {
     );
   }
 
+  var _index = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Videos from D.Tube'),
       ),
-      body: body(),
+      body: IndexedStack(
+        children: [
+          body(),
+          const Text('Trending screen'),
+          const Text('Favorites screen'),
+          const Text('Community screen'),
+          const Text('Settings screen'),
+        ],
+        index: _index,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home', backgroundColor: Colors.black87),
+          BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: 'Trending', backgroundColor: Colors.black87),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favorites', backgroundColor: Colors.black87),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community', backgroundColor: Colors.black87),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting', backgroundColor: Colors.black87),
+        ],
+        currentIndex: _index,
+        onTap: (index) {
+          setState(() {
+            _index = index;
+          });
+        },
+      ),
     );
   }
 }
