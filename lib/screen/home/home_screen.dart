@@ -37,92 +37,119 @@ class _HomeWidgetState extends State<HomeWidget> {
     }
   }
 
+  Widget titleAndSubtitle(String title, String subtitle) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              // responseItems[index].json.title,
+              style: Theme.of(context).textTheme.bodyText1),
+          Text(subtitle,
+              //'${responseItems[index].author}, DTC ${responseItems[index].dist}, ${responseItems[index].json.tag}',
+              style: Theme.of(context).textTheme.bodyText2)
+        ],
+      ),
+    );
+  }
+
+  Widget videoInfo(NewVideosResponseModelItem item) {
+    return Container(
+      margin: const EdgeInsets.all(5),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: Image.network(
+                'https://avalon.d.tube/image/avatar/${item.author}/small')
+                .image,
+          ),
+          const SizedBox(width: 5),
+          titleAndSubtitle(
+            item.json.title,
+            '${item.author}, DTC ${item.dist}, ${item.json.tag}',
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget videoThumbnail(NewVideosResponseModelItem item) {
+    return SizedBox(
+      height: 240,
+      width: MediaQuery.of(context).size.width,
+      child: FadeInImage.assetNetwork(
+        placeholder: 'images/not_found_thumb.png',
+        image: getVideoThumbnailUrl(item),
+        imageErrorBuilder: (context, error, trace) {
+          return Image.asset('images/not_found_thumb.png');
+        },
+        fit: BoxFit.fitWidth,
+      ),
+    );
+  }
+
+  Widget videoListTile(NewVideosResponseModelItem item) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Column(
+        children: [
+          videoThumbnail(item),
+          videoInfo(item)
+        ],
+      ),
+    );
+  }
+
+  Widget listOfVideoTiles(List<NewVideosResponseModelItem> list) {
+    return ListView.separated(
+        itemBuilder: (BuildContext context, int index) {
+          return videoListTile(list[index]);
+        },
+        separatorBuilder: (BuildContext context, int index) {
+          return const Divider();
+        },
+        itemCount: list.length);
+  }
+
+  Widget loadingIndicator() {
+    return Center(
+      child: Column(
+        children: const [
+          Spacer(),
+          CircularProgressIndicator(),
+          SizedBox(
+            height: 10,
+          ),
+          Text('Loading Data'),
+          Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget body() {
+    return FutureBuilder(
+      future: loadNewVideos(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text(
+              'An Error occured. ${snapshot.error?.toString() ?? 'Unknown Error'}');
+        } else if (snapshot.hasData) {
+          return listOfVideoTiles(snapshot.data as List<NewVideosResponseModelItem>);
+        } else {
+          return loadingIndicator();
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Videos from D.Tube'),
       ),
-      body: FutureBuilder(
-        future: loadNewVideos(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text(
-                'An Error occured. ${snapshot.error?.toString() ?? 'Unknown Error'}');
-          } else if (snapshot.hasData) {
-            var responseItems =
-                snapshot.data as List<NewVideosResponseModelItem>;
-            return ListView.separated(
-                itemBuilder: (BuildContext context, int index) {
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Column(
-                      children: [
-                        SizedBox(
-                          height: 240,
-                          width: MediaQuery.of(context).size.width,
-                          child: FadeInImage.assetNetwork(
-                            placeholder: 'images/not_found_thumb.png',
-                            image: getVideoThumbnailUrl(responseItems[index]),
-                            imageErrorBuilder: (context, error, trace) {
-                              return Image.asset('images/not_found_thumb.png');
-                            },
-                            fit: BoxFit.fitWidth,
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.all(5),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundImage: Image.network(
-                                        'https://avalon.d.tube/image/avatar/${responseItems[index].author}/small')
-                                    .image,
-                              ),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(responseItems[index].json.title,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText1),
-                                    Text('${responseItems[index].author}, DTC ${responseItems[index].dist}, ${responseItems[index].json.tag}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyText2)
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                  );
-                },
-                separatorBuilder: (BuildContext context, int index) {
-                  return const Divider();
-                },
-                itemCount: responseItems.length);
-          } else {
-            return Center(
-              child: Column(
-                children: const [
-                  Spacer(),
-                  CircularProgressIndicator(),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  Text('Loading Data'),
-                  Spacer(),
-                ],
-              ),
-            );
-          }
-        },
-      ),
+      body: body(),
     );
   }
 }
