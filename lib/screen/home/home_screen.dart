@@ -60,7 +60,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         children: [
           CircleAvatar(
             backgroundImage: Image.network(
-                'https://avalon.d.tube/image/avatar/${item.author}/small')
+                    'https://avalon.d.tube/image/avatar/${item.author}/small')
                 .image,
           ),
           const SizedBox(width: 5),
@@ -92,10 +92,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Column(
-        children: [
-          videoThumbnail(item),
-          videoInfo(item)
-        ],
+        children: [videoThumbnail(item), videoInfo(item)],
       ),
     );
   }
@@ -135,11 +132,61 @@ class _HomeWidgetState extends State<HomeWidget> {
           return Text(
               'An Error occured. ${snapshot.error?.toString() ?? 'Unknown Error'}');
         } else if (snapshot.hasData) {
-          return listOfVideoTiles(snapshot.data as List<NewVideosResponseModelItem>);
+          return listOfVideoTiles(
+              snapshot.data as List<NewVideosResponseModelItem>);
         } else {
           return loadingIndicator();
         }
       },
+    );
+  }
+
+  void changeScreen(int index) {
+    setState(() {
+      _index = index;
+      Navigator.of(context).pop();
+    });
+  }
+
+  Widget _getDrawer() {
+    return ListView(
+      children: [
+        ListTile(
+          leading: Icon(Icons.home),
+          title: const Text('Home'),
+          onTap: () {
+            changeScreen(0);
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.local_fire_department),
+          title: const Text('Trending'),
+          onTap: () {
+            changeScreen(1);
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.star),
+          title: const Text('Favorites'),
+          onTap: () {
+            changeScreen(2);
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.people),
+          title: const Text('Community'),
+          onTap: () {
+            changeScreen(3);
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.settings),
+          title: const Text('Setting'),
+          onTap: () {
+            changeScreen(4);
+          },
+        ),
+      ],
     );
   }
 
@@ -161,21 +208,22 @@ class _HomeWidgetState extends State<HomeWidget> {
         ],
         index: _index,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home', backgroundColor: Colors.black87),
-          BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: 'Trending', backgroundColor: Colors.black87),
-          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favorites', backgroundColor: Colors.black87),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community', backgroundColor: Colors.black87),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting', backgroundColor: Colors.black87),
-        ],
-        currentIndex: _index,
-        onTap: (index) {
-          setState(() {
-            _index = index;
-          });
-        },
-      ),
+      drawer: Drawer(child: _getDrawer()),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   items: const [
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home', backgroundColor: Colors.black87),
+      //     BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: 'Trending', backgroundColor: Colors.black87),
+      //     BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favorites', backgroundColor: Colors.black87),
+      //     BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community', backgroundColor: Colors.black87),
+      //     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting', backgroundColor: Colors.black87),
+      //   ],
+      //   currentIndex: _index,
+      //   onTap: (index) {
+      //     setState(() {
+      //       _index = index;
+      //     });
+      //   },
+      // ),
     );
   }
 }
