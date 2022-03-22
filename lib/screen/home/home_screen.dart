@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key}) : super(key: key);
+  const HomeWidget({Key? key, required this.title, required this.path}) : super(key: key);
+  final String title;
+  final String path;
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -12,7 +14,7 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   Future<List<NewVideosResponseModelItem>> loadNewVideos() async {
-    var request = http.Request('GET', Uri.parse('https://avalon.d.tube/new'));
+    var request = http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
       var responseValue = await response.stream.bytesToString();
@@ -141,89 +143,49 @@ class _HomeWidgetState extends State<HomeWidget> {
     );
   }
 
-  void changeScreen(int index) {
-    setState(() {
-      _index = index;
-      Navigator.of(context).pop();
-    });
+  void pushHomeFeed({required String title, required String path}) {
+    Navigator.of(context).pop();
+    var screen = HomeWidget(title: title, path: path);
+    var route = MaterialPageRoute(builder: (c) => screen);
+    Navigator.of(context).pushReplacement(route);
   }
 
   Widget _getDrawer() {
     return ListView(
       children: [
         ListTile(
-          leading: Icon(Icons.home),
-          title: const Text('Home'),
+          leading: const Icon(Icons.local_fire_department),
+          title: const Text('Hot Videos'),
           onTap: () {
-            changeScreen(0);
+            pushHomeFeed(title: 'Hot Videos', path: 'hot');
           },
         ),
         ListTile(
-          leading: Icon(Icons.local_fire_department),
-          title: const Text('Trending'),
+          leading: const Icon(Icons.stream),
+          title: const Text('Trending Videos'),
           onTap: () {
-            changeScreen(1);
+            pushHomeFeed(title: 'Trending Videos', path: 'trending');
           },
         ),
         ListTile(
-          leading: Icon(Icons.star),
-          title: const Text('Favorites'),
+          leading: const Icon(Icons.timelapse),
+          title: const Text('New Videos'),
           onTap: () {
-            changeScreen(2);
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.people),
-          title: const Text('Community'),
-          onTap: () {
-            changeScreen(3);
-          },
-        ),
-        ListTile(
-          leading: Icon(Icons.settings),
-          title: const Text('Setting'),
-          onTap: () {
-            changeScreen(4);
+            pushHomeFeed(title: 'New Videos', path: 'new');
           },
         ),
       ],
     );
   }
 
-  var _index = 0;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Videos from D.Tube'),
+        title: Text(widget.title),
       ),
-      body: IndexedStack(
-        children: [
-          body(),
-          const Text('Trending screen'),
-          const Text('Favorites screen'),
-          const Text('Community screen'),
-          const Text('Settings screen'),
-        ],
-        index: _index,
-      ),
+      body: body(),
       drawer: Drawer(child: _getDrawer()),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   items: const [
-      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home', backgroundColor: Colors.black87),
-      //     BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: 'Trending', backgroundColor: Colors.black87),
-      //     BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Favorites', backgroundColor: Colors.black87),
-      //     BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Community', backgroundColor: Colors.black87),
-      //     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting', backgroundColor: Colors.black87),
-      //   ],
-      //   currentIndex: _index,
-      //   onTap: (index) {
-      //     setState(() {
-      //       _index = index;
-      //     });
-      //   },
-      // ),
     );
   }
 }
