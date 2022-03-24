@@ -1,10 +1,12 @@
 import 'dart:developer';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
+
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key, required this.title, required this.path}) : super(key: key);
+  const HomeWidget({Key? key, required this.title, required this.path})
+      : super(key: key);
   final String title;
   final String path;
 
@@ -14,7 +16,8 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   Future<List<NewVideosResponseModelItem>> loadNewVideos() async {
-    var request = http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
+    var request =
+        http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
       var responseValue = await response.stream.bytesToString();
@@ -76,18 +79,31 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   Widget videoThumbnail(NewVideosResponseModelItem item) {
-    return SizedBox(
-      height: 240,
-      width: MediaQuery.of(context).size.width,
-      child: FadeInImage.assetNetwork(
-        placeholder: 'images/not_found_thumb.png',
-        image: getVideoThumbnailUrl(item),
-        imageErrorBuilder: (context, error, trace) {
-          return Image.asset('images/not_found_thumb.png');
-        },
-        fit: BoxFit.fitWidth,
+    return Stack(children: [
+      SizedBox(
+        height: 240,
+        width: MediaQuery.of(context).size.width,
+        child: FadeInImage.assetNetwork(
+          placeholder: 'images/not_found_thumb.png',
+          image: getVideoThumbnailUrl(item),
+          imageErrorBuilder: (context, error, trace) {
+            return Image.asset('images/not_found_thumb.png');
+          },
+          fit: BoxFit.fitWidth,
+        ),
       ),
-    );
+      Row(
+        children: [
+          const Spacer(),
+          Image.asset(item.json.files.youtube.isEmpty
+              ? 'images/ipfs.png'
+              : 'images/yt.png'),
+          const SizedBox(
+            width: 5,
+          )
+        ],
+      )
+    ]);
   }
 
   Widget videoListTile(NewVideosResponseModelItem item) {
