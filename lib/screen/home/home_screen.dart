@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/screen/video_details.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -112,6 +113,13 @@ class _HomeWidgetState extends State<HomeWidget> {
       title: Column(
         children: [videoThumbnail(item), videoInfo(item)],
       ),
+      onTap: () {
+        if (item.json.files.youtube.isNotEmpty) {
+          var screen = VideoDetailsScreen(videoId: item.json.files.youtube);
+          var route = MaterialPageRoute(builder: (c) => screen);
+          Navigator.of(context).push(route);
+        }
+      },
     );
   }
 
