@@ -1,12 +1,15 @@
-import 'package:dtube/models/new_videos_feed/safe_convert.dart';
 import 'dart:convert';
+
+import 'package:dtube/models/new_videos_feed/ipfs_video_details.dart';
+import 'package:dtube/models/new_videos_feed/safe_convert.dart';
 
 // final jsonList = json.decode(jsonStr) as List;
 // final list = jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
 
 List<NewVideosResponseModelItem> decodeStringOfVideos(String jsonString) {
   final jsonList = json.decode(jsonString) as List;
-  final list = jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
+  final list =
+      jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
   return list;
 }
 
@@ -29,25 +32,28 @@ class NewVideosResponseModelItem {
     this.dist = 0.0,
   });
 
-  factory NewVideosResponseModelItem.fromJson(Map<String, dynamic>? json) => NewVideosResponseModelItem(
-    id: asString(json, '_id'),
-    author: asString(json, 'author'),
-    link: asString(json, 'link'),
-    json: NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
-    votes: asList(json, 'votes').map((e) => NewVideosResponseModelItemVotesItem.fromJson(e)).toList(),
-    ts: asInt(json, 'ts'),
-    dist: asDouble(json, 'dist'),
-  );
+  factory NewVideosResponseModelItem.fromJson(Map<String, dynamic>? json) =>
+      NewVideosResponseModelItem(
+        id: asString(json, '_id'),
+        author: asString(json, 'author'),
+        link: asString(json, 'link'),
+        json: NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
+        votes: asList(json, 'votes')
+            .map((e) => NewVideosResponseModelItemVotesItem.fromJson(e))
+            .toList(),
+        ts: asInt(json, 'ts'),
+        dist: asDouble(json, 'dist'),
+      );
 
   Map<String, dynamic> toJson() => {
-    '_id': id,
-    'author': author,
-    'link': link,
-    'json': json.toJson(),
-    'votes': votes.map((e) => e.toJson()),
-    'ts': ts,
-    'dist': dist,
-  };
+        '_id': id,
+        'author': author,
+        'link': link,
+        'json': json.toJson(),
+        'votes': votes.map((e) => e.toJson()),
+        'ts': ts,
+        'dist': dist,
+      };
 }
 
 class NewVideosResponseModelItemJson {
@@ -75,49 +81,54 @@ class NewVideosResponseModelItemJson {
     this.oc = 0,
   });
 
-  factory NewVideosResponseModelItemJson.fromJson(Map<String, dynamic>? json) => NewVideosResponseModelItemJson(
-    files: NewVideosResponseModelItemFiles.fromJson(asMap(json, 'files')),
-    title: asString(json, 'title'),
-    desc: asString(json, 'desc'),
-    dur: asString(json, 'dur'),
-    tag: asString(json, 'tag'),
-    thumbnailUrlExternal: asString(json, 'thumbnailUrlExternal'),
-    thumbnailUrl: asString(json, 'thumbnailUrl'),
-    hide: asInt(json, 'hide'),
-    nsfw: asInt(json, 'nsfw'),
-    oc: asInt(json, 'oc'),
-  );
+  factory NewVideosResponseModelItemJson.fromJson(Map<String, dynamic>? json) =>
+      NewVideosResponseModelItemJson(
+        files: NewVideosResponseModelItemFiles.fromJson(asMap(json, 'files')),
+        title: asString(json, 'title'),
+        desc: asString(json, 'desc'),
+        dur: asString(json, 'dur'),
+        tag: asString(json, 'tag'),
+        thumbnailUrlExternal: asString(json, 'thumbnailUrlExternal'),
+        thumbnailUrl: asString(json, 'thumbnailUrl'),
+        hide: asInt(json, 'hide'),
+        nsfw: asInt(json, 'nsfw'),
+        oc: asInt(json, 'oc'),
+      );
 
   Map<String, dynamic> toJson() => {
-    'files': files.toJson(),
-    'title': title,
-    'desc': desc,
-    'dur': dur,
-    'tag': tag,
-    'thumbnailUrlExternal': thumbnailUrlExternal,
-    'thumbnailUrl': thumbnailUrl,
-    'hide': hide,
-    'nsfw': nsfw,
-    'oc': oc,
-  };
+        'files': files.toJson(),
+        'title': title,
+        'desc': desc,
+        'dur': dur,
+        'tag': tag,
+        'thumbnailUrlExternal': thumbnailUrlExternal,
+        'thumbnailUrl': thumbnailUrl,
+        'hide': hide,
+        'nsfw': nsfw,
+        'oc': oc,
+      };
 }
 
 class NewVideosResponseModelItemFiles {
   final String youtube;
+  final IpfsVideoDetails? ipfs;
 
   NewVideosResponseModelItemFiles({
     this.youtube = "",
+    this.ipfs,
   });
 
-  factory NewVideosResponseModelItemFiles.fromJson(Map<String, dynamic>? json) => NewVideosResponseModelItemFiles(
-    youtube: asString(json, 'youtube'),
-  );
+  factory NewVideosResponseModelItemFiles.fromJson(
+          Map<String, dynamic>? json) =>
+      NewVideosResponseModelItemFiles(
+        youtube: asString(json, 'youtube'),
+        ipfs: IpfsVideoDetails.fromJson(json?['ipfs']),
+      );
 
   Map<String, dynamic> toJson() => {
-    'youtube': youtube,
-  };
+        'youtube': youtube,
+      };
 }
-
 
 class NewVideosResponseModelItemVotesItem {
   final String u;
@@ -136,22 +147,23 @@ class NewVideosResponseModelItemVotesItem {
     this.claimable = 0.0,
   });
 
-  factory NewVideosResponseModelItemVotesItem.fromJson(Map<String, dynamic>? json) => NewVideosResponseModelItemVotesItem(
-    u: asString(json, 'u'),
-    ts: asInt(json, 'ts'),
-    vt: asInt(json, 'vt'),
-    tag: asString(json, 'tag'),
-    gross: asDouble(json, 'gross'),
-    claimable: asDouble(json, 'claimable'),
-  );
+  factory NewVideosResponseModelItemVotesItem.fromJson(
+          Map<String, dynamic>? json) =>
+      NewVideosResponseModelItemVotesItem(
+        u: asString(json, 'u'),
+        ts: asInt(json, 'ts'),
+        vt: asInt(json, 'vt'),
+        tag: asString(json, 'tag'),
+        gross: asDouble(json, 'gross'),
+        claimable: asDouble(json, 'claimable'),
+      );
 
   Map<String, dynamic> toJson() => {
-    'u': u,
-    'ts': ts,
-    'vt': vt,
-    'tag': tag,
-    'gross': gross,
-    'claimable': claimable,
-  };
+        'u': u,
+        'ts': ts,
+        'vt': vt,
+        'tag': tag,
+        'gross': gross,
+        'claimable': claimable,
+      };
 }
-

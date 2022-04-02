@@ -114,11 +114,9 @@ class _HomeWidgetState extends State<HomeWidget> {
         children: [videoThumbnail(item), videoInfo(item)],
       ),
       onTap: () {
-        if (item.json.files.youtube.isNotEmpty) {
-          var screen = VideoDetailsScreen(videoId: item.json.files.youtube);
-          var route = MaterialPageRoute(builder: (c) => screen);
-          Navigator.of(context).push(route);
-        }
+        var screen = VideoDetailsScreen(item: item);
+        var route = MaterialPageRoute(builder: (c) => screen);
+        Navigator.of(context).push(route);
       },
     );
   }
