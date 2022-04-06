@@ -37,6 +37,7 @@ dependencies:
   http: ^0.13.4
   youtube_player_iframe: ^2.2.2
   better_player: ^0.0.81
+  timeago: ^3.2.2
 
 dev_dependencies:
   flutter_test:

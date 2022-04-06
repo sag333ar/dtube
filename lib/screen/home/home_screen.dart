@@ -4,6 +4,7 @@ import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/screen/video_details.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:timeago/timeago.dart' as timeago;
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({Key? key, required this.title, required this.path})
@@ -60,6 +61,9 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   Widget videoInfo(NewVideosResponseModelItem item) {
+    var upvotes = item.votes.where((element) => element.vt > 0).length - 1;
+    var dowvotes = item.votes.where((element) => element.vt < 0).length;
+    var dateTime = timeago.format(DateTime.fromMillisecondsSinceEpoch(item.ts));
     return Container(
       margin: const EdgeInsets.all(5),
       child: Row(
@@ -72,7 +76,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           const SizedBox(width: 5),
           titleAndSubtitle(
             item.json.title,
-            '${item.author}, DTC ${item.dist}, ${item.json.tag}',
+            '${item.author}, DTC ${item.dist.toStringAsFixed(2)} $dateTime ${upvotes > 0 ? '👍 $upvotes' : ''} ${dowvotes > 0 ? '👎 $dowvotes' : ''}',
           )
         ],
       ),
