@@ -8,6 +8,7 @@ class DTubeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'D.tube',
+      debugShowCheckedModeBanner: false,
       home: HomeWidget(title: 'New Videos', path: 'new'),
     );
   }
