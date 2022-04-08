@@ -1,5 +1,6 @@
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/screen/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -60,12 +61,38 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
       ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _player(),
+            InkWell(
+              child: Container(
+                margin: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: Image.network(
+                              'https://avalon.d.tube/image/avatar/${widget.item.author}/small')
+                          .image,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(widget.item.author,
+                        style: Theme.of(context).textTheme.bodyLarge),
+                  ],
+                ),
+              ),
+              onTap: () {
+                var screen = HomeWidget(
+                    title: widget.item.author,
+                    path: 'blog/${widget.item.author}',
+                    shouldShowDrawer: false);
+                var route = MaterialPageRoute(builder: (c) => screen);
+                Navigator.of(context).pushReplacement(route);
+              },
+            ),
             Container(
-              margin: const EdgeInsets.all(10),
+              margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
               child: Text(widget.item.json.title,
-                  style: Theme.of(context).textTheme.bodyLarge),
+                  style: Theme.of(context).textTheme.headline6),
             ),
             Container(
               margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),

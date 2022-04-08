@@ -7,10 +7,15 @@ import 'package:http/http.dart' as http;
 import 'package:timeago/timeago.dart' as timeago;
 
 class HomeWidget extends StatefulWidget {
-  const HomeWidget({Key? key, required this.title, required this.path})
+  const HomeWidget(
+      {Key? key,
+      required this.title,
+      required this.path,
+      required this.shouldShowDrawer})
       : super(key: key);
   final String title;
   final String path;
+  final bool shouldShowDrawer;
 
   @override
   State<HomeWidget> createState() => _HomeWidgetState();
@@ -171,7 +176,7 @@ class _HomeWidgetState extends State<HomeWidget> {
 
   void pushHomeFeed({required String title, required String path}) {
     Navigator.of(context).pop();
-    var screen = HomeWidget(title: title, path: path);
+    var screen = HomeWidget(title: title, path: path, shouldShowDrawer: true);
     var route = MaterialPageRoute(builder: (c) => screen);
     Navigator.of(context).pushReplacement(route);
   }
@@ -211,7 +216,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         title: Text(widget.title),
       ),
       body: body(),
-      drawer: Drawer(child: _getDrawer()),
+      drawer: widget.shouldShowDrawer ? Drawer(child: _getDrawer()) : null,
     );
   }
 }
