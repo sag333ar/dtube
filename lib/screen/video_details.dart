@@ -53,6 +53,98 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             : Container();
   }
 
+  void showUpVotes() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 400,
+          child: ListView.separated(
+            itemBuilder: (c, i) {
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: Image.network(
+                          'https://avalon.d.tube/image/avatar/${widget.item.votes[i].u}/small')
+                      .image,
+                ),
+                title: Text(widget.item.votes[i].u,
+                    style: Theme.of(context).textTheme.bodyLarge),
+                subtitle: Text(widget.item.votes[i].vt.toStringAsFixed(0)),
+              );
+            },
+            separatorBuilder: (c, i) => const Divider(),
+            itemCount: widget.item.votes.length,
+          ),
+        );
+      },
+    );
+  }
+
+  void showDownVotes() {}
+
+  Widget _videoAuthorInfo() {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          InkWell(
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundImage: Image.network(
+                          'https://avalon.d.tube/image/avatar/${widget.item.author}/small')
+                      .image,
+                ),
+                const SizedBox(width: 5),
+                Text(widget.item.author,
+                    style: Theme.of(context).textTheme.bodyLarge),
+              ],
+            ),
+            onTap: () {
+              var screen = HomeWidget(
+                  title: widget.item.author,
+                  path: 'blog/${widget.item.author}',
+                  shouldShowDrawer: false);
+              var route = MaterialPageRoute(builder: (c) => screen);
+              Navigator.of(context).push(route);
+            },
+          ),
+          const Spacer(),
+          IconButton(
+              onPressed: () {
+                showUpVotes();
+              },
+              icon: const Icon(Icons.thumb_up_sharp)),
+          IconButton(
+              onPressed: () => showDownVotes,
+              icon: const Icon(Icons.thumb_down_sharp)),
+        ],
+      ),
+    );
+  }
+
+  Widget _videoTitle() {
+    return Container(
+      margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+      child: Text(widget.item.json.title,
+          style: Theme.of(context).textTheme.headline6),
+    );
+  }
+
+  Widget _videoDescription() {
+    return Container(
+      margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+      child: MarkdownBody(
+        data: widget.item.json.desc,
+        onTapLink: (text, href, title) async {
+          if (href != null) {
+            await launch(href);
+          }
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,47 +156,9 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _player(),
-            InkWell(
-              child: Container(
-                margin: const EdgeInsets.all(10),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: Image.network(
-                              'https://avalon.d.tube/image/avatar/${widget.item.author}/small')
-                          .image,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(widget.item.author,
-                        style: Theme.of(context).textTheme.bodyLarge),
-                  ],
-                ),
-              ),
-              onTap: () {
-                var screen = HomeWidget(
-                    title: widget.item.author,
-                    path: 'blog/${widget.item.author}',
-                    shouldShowDrawer: false);
-                var route = MaterialPageRoute(builder: (c) => screen);
-                Navigator.of(context).pushReplacement(route);
-              },
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-              child: Text(widget.item.json.title,
-                  style: Theme.of(context).textTheme.headline6),
-            ),
-            Container(
-              margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-              child: MarkdownBody(
-                data: widget.item.json.desc,
-                onTapLink: (text, href, title) async {
-                  if (href != null) {
-                    await launch(href);
-                  }
-                },
-              ),
-            ),
+            _videoAuthorInfo(),
+            _videoTitle(),
+            _videoDescription(),
           ],
         ),
       ),
