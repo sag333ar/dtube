@@ -69,6 +69,7 @@ class _HomeWidgetState extends State<HomeWidget> {
     var upvotes = item.votes.where((element) => element.vt > 0).length - 1;
     var dowvotes = item.votes.where((element) => element.vt < 0).length;
     var dateTime = timeago.format(DateTime.fromMillisecondsSinceEpoch(item.ts));
+    var dtcValue = item.dist / 100.0;
     return Container(
       margin: const EdgeInsets.all(5),
       child: Row(
@@ -81,7 +82,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           const SizedBox(width: 5),
           titleAndSubtitle(
             item.json.title,
-            '${item.author}, DTC ${item.dist.toStringAsFixed(2)} $dateTime ${upvotes > 0 ? '👍 $upvotes' : ''} ${dowvotes > 0 ? '👎 $dowvotes' : ''}',
+            '${item.author}, DTC ${dtcValue.toStringAsFixed(2)} $dateTime ${upvotes > 0 ? '👍 $upvotes' : ''} ${dowvotes > 0 ? '👎 $dowvotes' : ''}',
           )
         ],
       ),

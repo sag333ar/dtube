@@ -1,8 +1,10 @@
+import 'package:badges/badges.dart';
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/screen/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -53,36 +55,95 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             : Container();
   }
 
-  void showUpVotes() {
+  Widget votesList(List<NewVideosResponseModelItemVotesItem> votes) {
+    var formatter = NumberFormat.compact();
+    return Container(
+      margin: const EdgeInsets.only(top: 55),
+      child: ListView.separated(
+        itemBuilder: (c, i) {
+          return ListTile(
+            contentPadding: const EdgeInsets.only(left: 10, right: 10),
+            leading: CircleAvatar(
+              backgroundImage: Image.network(
+                      'https://avalon.d.tube/image/avatar/${votes[i].u}/small')
+                  .image,
+            ),
+            title:
+                Text(votes[i].u, style: Theme.of(context).textTheme.bodyLarge),
+            subtitle: Text(formatter.format(votes[i].vt)),
+          );
+        },
+        separatorBuilder: (c, i) => const Divider(height: 0),
+        itemCount: votes.length,
+      ),
+    );
+  }
+
+  void showDownVotes() {
+    var downVotes =
+        widget.item.votes.where((element) => element.vt <= 0).toList();
     showModalBottomSheet(
       context: context,
       builder: (context) {
         return SizedBox(
           height: 400,
-          child: ListView.separated(
-            itemBuilder: (c, i) {
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: Image.network(
-                          'https://avalon.d.tube/image/avatar/${widget.item.votes[i].u}/small')
-                      .image,
+          child: Stack(
+            children: [
+              SizedBox(
+                height: 55,
+                child: AppBar(
+                  title: const Text('Down voted by following users'),
                 ),
-                title: Text(widget.item.votes[i].u,
-                    style: Theme.of(context).textTheme.bodyLarge),
-                subtitle: Text(widget.item.votes[i].vt.toStringAsFixed(0)),
-              );
-            },
-            separatorBuilder: (c, i) => const Divider(),
-            itemCount: widget.item.votes.length,
+              ),
+              votesList(downVotes),
+            ],
           ),
         );
       },
     );
   }
 
-  void showDownVotes() {}
+  void showUpVotes() {
+    var upVotes = widget.item.votes.where((element) => element.vt > 0).toList();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 400,
+          child: Stack(
+            children: [
+              SizedBox(
+                height: 55,
+                child: AppBar(
+                  title: const Text('Up voted by following users'),
+                ),
+              ),
+              votesList(upVotes),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Widget _videoAuthorInfo() {
+    var upvotes =
+        widget.item.votes.where((element) => element.vt > 0).length - 1;
+    var dowvotes = widget.item.votes.where((element) => element.vt < 0).length;
+    var upVoteButton = upvotes > 0
+        ? Badge(
+            badgeContent: Text('$upvotes'),
+            position: const BadgePosition(top: -15, end: -15),
+            child: const Icon(Icons.thumb_up_sharp),
+          )
+        : const Icon(Icons.thumb_up_sharp);
+    var downVoteButton = dowvotes > 0
+        ? Badge(
+            badgeContent: Text('$dowvotes'),
+            position: const BadgePosition(top: -15, end: -15),
+            child: const Icon(Icons.thumb_down_sharp),
+          )
+        : const Icon(Icons.thumb_down_sharp);
     return Container(
       margin: const EdgeInsets.all(10),
       child: Row(
@@ -110,14 +171,8 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             },
           ),
           const Spacer(),
-          IconButton(
-              onPressed: () {
-                showUpVotes();
-              },
-              icon: const Icon(Icons.thumb_up_sharp)),
-          IconButton(
-              onPressed: () => showDownVotes,
-              icon: const Icon(Icons.thumb_down_sharp)),
+          IconButton(onPressed: showUpVotes, icon: upVoteButton),
+          IconButton(onPressed: showDownVotes, icon: downVoteButton),
         ],
       ),
     );
