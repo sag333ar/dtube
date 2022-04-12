@@ -17,7 +17,7 @@ class NewVideosResponseModelItem {
   final String id;
   final String author;
   final String link;
-  final NewVideosResponseModelItemJson json;
+  final NewVideosResponseModelItemJson jsonObject;
   final List<NewVideosResponseModelItemVotesItem> votes;
   final int ts;
   final double dist;
@@ -26,7 +26,7 @@ class NewVideosResponseModelItem {
     this.id = "",
     this.author = "",
     this.link = "",
-    required this.json,
+    required this.jsonObject,
     required this.votes,
     this.ts = 0,
     this.dist = 0.0,
@@ -37,7 +37,8 @@ class NewVideosResponseModelItem {
         id: asString(json, '_id'),
         author: asString(json, 'author'),
         link: asString(json, 'link'),
-        json: NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
+        jsonObject:
+            NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
         votes: asList(json, 'votes')
             .map((e) => NewVideosResponseModelItemVotesItem.fromJson(e))
             .toList(),
@@ -45,11 +46,14 @@ class NewVideosResponseModelItem {
         dist: asDouble(json, 'dist'),
       );
 
+  factory NewVideosResponseModelItem.fromJsonString(String string) =>
+      NewVideosResponseModelItem.fromJson(json.decode(string));
+
   Map<String, dynamic> toJson() => {
         '_id': id,
         'author': author,
         'link': link,
-        'json': json.toJson(),
+        'json': jsonObject.toJson(),
         'votes': votes.map((e) => e.toJson()),
         'ts': ts,
         'dist': dist,

@@ -1,10 +1,14 @@
+import 'dart:developer';
+
 import 'package:badges/badges.dart';
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/screen/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
@@ -21,26 +25,49 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   late YoutubePlayerController _controller;
   late String? _videoUrl;
 
+  late List<NewVideosResponseModelItemVotesItem> votes;
+  bool doWeHaveVotesInfo = false;
+
   @override
   void initState() {
     super.initState();
-    if (widget.item.json.files.youtube.isNotEmpty) {
+    if (widget.item.jsonObject.files.youtube.isNotEmpty) {
       _controller = YoutubePlayerController(
-        initialVideoId: widget.item.json.files.youtube,
+        initialVideoId: widget.item.jsonObject.files.youtube,
         params: const YoutubePlayerParams(
           autoPlay: true,
           showControls: true,
           showFullscreenButton: true,
         ),
       );
-    } else if (widget.item.json.files.ipfs?.vid.src != null) {
-      var gateway = widget.item.json.files.ipfs?.gw ?? 'https://player.d.tube';
-      _videoUrl = '$gateway/ipfs/${widget.item.json.files.ipfs!.vid.src}';
+    } else if (widget.item.jsonObject.files.ipfs?.vid.src != null) {
+      var gateway =
+          widget.item.jsonObject.files.ipfs?.gw ?? 'https://player.d.tube';
+      _videoUrl = '$gateway/ipfs/${widget.item.jsonObject.files.ipfs!.vid.src}';
+    }
+    loadVoteInfo();
+  }
+
+  Future<void> loadVoteInfo() async {
+    var request = http.Request(
+        'GET', Uri.parse('https://avalon.d.tube/content/${widget.item.id}'));
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      var responseValue = await response.stream.bytesToString();
+      NewVideosResponseModelItem item =
+          NewVideosResponseModelItem.fromJsonString(responseValue);
+      setState(() {
+        votes = item.votes;
+        doWeHaveVotesInfo = true;
+      });
+    } else {
+      log(response.reasonPhrase ?? 'Status code not 200');
+      throw response.reasonPhrase ?? 'Status code not 200';
     }
   }
 
   Widget _player() {
-    return (widget.item.json.files.youtube.isNotEmpty)
+    return (widget.item.jsonObject.files.youtube.isNotEmpty)
         ? YoutubePlayerIFrame(
             controller: _controller,
             aspectRatio: 16 / 9,
@@ -56,13 +83,26 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   }
 
   Widget votesList(List<NewVideosResponseModelItemVotesItem> votes) {
+    if (votes.isEmpty) {
+      return const Center(
+        child: Text('Nothing to show.'),
+      );
+    }
+    votes.sort((a, b) => a.vt > b.vt
+        ? -1
+        : a.vt < b.vt
+            ? 1
+            : 0);
     var formatter = NumberFormat.compact();
     return Container(
       margin: const EdgeInsets.only(top: 55),
       child: ListView.separated(
         itemBuilder: (c, i) {
+          var dateTime =
+              timeago.format(DateTime.fromMillisecondsSinceEpoch(votes[i].ts));
           return ListTile(
-            contentPadding: const EdgeInsets.only(left: 10, right: 10),
+            contentPadding:
+                const EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
             leading: CircleAvatar(
               backgroundImage: Image.network(
                       'https://avalon.d.tube/image/avatar/${votes[i].u}/small')
@@ -70,7 +110,11 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             ),
             title:
                 Text(votes[i].u, style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text(formatter.format(votes[i].vt)),
+            subtitle: Text('${formatter.format(votes[i].vt)} votes\n$dateTime'),
+            trailing: Text(
+              '${(votes[i].claimable / 100.0).toStringAsFixed(2)} DTC',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
           );
         },
         separatorBuilder: (c, i) => const Divider(height: 0),
@@ -80,8 +124,7 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   }
 
   void showDownVotes() {
-    var downVotes =
-        widget.item.votes.where((element) => element.vt <= 0).toList();
+    var downVotes = votes.where((element) => element.vt <= 0).toList();
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -104,7 +147,7 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   }
 
   void showUpVotes() {
-    var upVotes = widget.item.votes.where((element) => element.vt > 0).toList();
+    var upVotes = votes.where((element) => element.vt > 0).toList();
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -122,6 +165,31 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             ],
           ),
         );
+      },
+    );
+  }
+
+  Widget _author() {
+    return InkWell(
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage: Image.network(
+                    'https://avalon.d.tube/image/avatar/${widget.item.author}/small')
+                .image,
+          ),
+          const SizedBox(width: 5),
+          Text(widget.item.author,
+              style: Theme.of(context).textTheme.bodyLarge),
+        ],
+      ),
+      onTap: () {
+        var screen = HomeWidget(
+            title: widget.item.author,
+            path: 'blog/${widget.item.author}',
+            shouldShowDrawer: false);
+        var route = MaterialPageRoute(builder: (c) => screen);
+        Navigator.of(context).push(route);
       },
     );
   }
@@ -144,36 +212,26 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             child: const Icon(Icons.thumb_down_sharp),
           )
         : const Icon(Icons.thumb_down_sharp);
+    var array = [
+      _author(),
+      const Spacer(),
+      Text(
+        '${(widget.item.dist / 100.0).toStringAsFixed(2)} DTC',
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
+    ];
+
+    if (doWeHaveVotesInfo) {
+      array += [
+        IconButton(onPressed: showUpVotes, icon: upVoteButton),
+        IconButton(onPressed: showDownVotes, icon: downVoteButton),
+      ];
+    }
+
     return Container(
       margin: const EdgeInsets.all(10),
       child: Row(
-        children: [
-          InkWell(
-            child: Row(
-              children: [
-                CircleAvatar(
-                  backgroundImage: Image.network(
-                          'https://avalon.d.tube/image/avatar/${widget.item.author}/small')
-                      .image,
-                ),
-                const SizedBox(width: 5),
-                Text(widget.item.author,
-                    style: Theme.of(context).textTheme.bodyLarge),
-              ],
-            ),
-            onTap: () {
-              var screen = HomeWidget(
-                  title: widget.item.author,
-                  path: 'blog/${widget.item.author}',
-                  shouldShowDrawer: false);
-              var route = MaterialPageRoute(builder: (c) => screen);
-              Navigator.of(context).push(route);
-            },
-          ),
-          const Spacer(),
-          IconButton(onPressed: showUpVotes, icon: upVoteButton),
-          IconButton(onPressed: showDownVotes, icon: downVoteButton),
-        ],
+        children: array,
       ),
     );
   }
@@ -181,7 +239,7 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   Widget _videoTitle() {
     return Container(
       margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-      child: Text(widget.item.json.title,
+      child: Text(widget.item.jsonObject.title,
           style: Theme.of(context).textTheme.headline6),
     );
   }
@@ -190,7 +248,7 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
     return Container(
       margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
       child: MarkdownBody(
-        data: widget.item.json.desc,
+        data: widget.item.jsonObject.desc,
         onTapLink: (text, href, title) async {
           if (href != null) {
             await launch(href);

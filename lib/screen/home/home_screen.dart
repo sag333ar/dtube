@@ -38,12 +38,12 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   String getVideoThumbnailUrl(NewVideosResponseModelItem item) {
-    if (item.json.thumbnailUrl.isNotEmpty) {
-      return item.json.thumbnailUrl;
-    } else if (item.json.thumbnailUrlExternal.isNotEmpty) {
-      return item.json.thumbnailUrlExternal;
-    } else if (item.json.files.youtube.isNotEmpty) {
-      return "https://img.youtube.com/vi/${item.json.files.youtube}/0.jpg";
+    if (item.jsonObject.thumbnailUrl.isNotEmpty) {
+      return item.jsonObject.thumbnailUrl;
+    } else if (item.jsonObject.thumbnailUrlExternal.isNotEmpty) {
+      return item.jsonObject.thumbnailUrlExternal;
+    } else if (item.jsonObject.files.youtube.isNotEmpty) {
+      return "https://img.youtube.com/vi/${item.jsonObject.files.youtube}/0.jpg";
     } else {
       return "";
     }
@@ -55,10 +55,10 @@ class _HomeWidgetState extends State<HomeWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              // responseItems[index].json.title,
+              // responseItems[index].jsonObject.title,
               style: Theme.of(context).textTheme.bodyText1),
           Text(subtitle,
-              //'${responseItems[index].author}, DTC ${responseItems[index].dist}, ${responseItems[index].json.tag}',
+              //'${responseItems[index].author}, DTC ${responseItems[index].dist}, ${responseItems[index].jsonObject.tag}',
               style: Theme.of(context).textTheme.bodyText2)
         ],
       ),
@@ -81,7 +81,7 @@ class _HomeWidgetState extends State<HomeWidget> {
           ),
           const SizedBox(width: 5),
           titleAndSubtitle(
-            item.json.title,
+            item.jsonObject.title,
             '${item.author}, DTC ${dtcValue.toStringAsFixed(2)} $dateTime ${upvotes > 0 ? '👍 $upvotes' : ''} ${dowvotes > 0 ? '👎 $dowvotes' : ''}',
           )
         ],
@@ -106,7 +106,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       Row(
         children: [
           const Spacer(),
-          Image.asset(item.json.files.youtube.isEmpty
+          Image.asset(item.jsonObject.files.youtube.isEmpty
               ? 'images/ipfs.png'
               : 'images/yt.png'),
           const SizedBox(
