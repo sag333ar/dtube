@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/screen/search/search_screen.dart';
 import 'package:dtube/screen/video_details.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -215,6 +216,16 @@ class _HomeWidgetState extends State<HomeWidget> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            onPressed: () {
+              var screen = const SearchScreen();
+              var route = MaterialPageRoute(builder: (c) => screen);
+              Navigator.of(context).push(route);
+            },
+            icon: const Icon(Icons.search),
+          ),
+        ],
       ),
       body: body(),
       drawer: widget.shouldShowDrawer ? Drawer(child: _getDrawer()) : null,
