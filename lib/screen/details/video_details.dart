@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:badges/badges.dart';
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/models/new_videos_feed/video_comment.dart';
 import 'package:dtube/screen/home/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -26,7 +27,9 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   late String? _videoUrl;
 
   late List<NewVideosResponseModelItemVotesItem> votes;
+  late List<VideoComment> comments;
   bool doWeHaveVotesInfo = false;
+  bool doWeHaveComments = false;
 
   @override
   void initState() {
@@ -48,6 +51,51 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
     loadVoteInfo();
   }
 
+  List<VideoComment> refactorComments(NewVideosResponseModelItem item) {
+    var arrayOfComments = item.videoComments;
+    List<VideoComment> refactoredComments = [];
+    List<String> ids = item.child.map((e) {
+      return e.join("/");
+    }).toList();
+    refactoredComments += arrayOfComments.where((e) {
+      return ids.contains(e.id);
+    }).toList();
+    refactoredComments.sort((a, b) {
+      return a.ts < b.ts
+          ? 1
+          : a.ts > b.ts
+              ? -1
+              : 0;
+    });
+    while (refactoredComments.where((e) => e.isVisited == false).isNotEmpty) {
+      var firstComment =
+          refactoredComments.where((e) => e.isVisited == false).first;
+      if (firstComment.isVisited) continue;
+      var indexOfFirstElement = refactoredComments.indexOf(firstComment);
+      if (firstComment.child.isNotEmpty) {
+        List<String> childrenIds = firstComment.child.map((e) {
+          return e.join("/");
+        }).toList();
+        List<VideoComment> children = arrayOfComments.where((e) {
+          return childrenIds.contains(e.id);
+        }).toList();
+        children.sort((a, b) {
+          return a.ts < b.ts
+              ? 1
+              : a.ts > b.ts
+                  ? -1
+                  : 0;
+        });
+        for (var e in children) {
+          e.level = firstComment.level + 1;
+        }
+        refactoredComments.insertAll(indexOfFirstElement + 1, children);
+      }
+      firstComment.isVisited = true;
+    }
+    return refactoredComments;
+  }
+
   Future<void> loadVoteInfo() async {
     var request = http.Request(
         'GET', Uri.parse('https://avalon.d.tube/content/${widget.item.id}'));
@@ -58,7 +106,9 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
           NewVideosResponseModelItem.fromJsonString(responseValue);
       setState(() {
         votes = item.votes;
+        comments = refactorComments(item);
         doWeHaveVotesInfo = true;
+        doWeHaveComments = true;
       });
     } else {
       log(response.reasonPhrase ?? 'Status code not 200');
@@ -146,6 +196,50 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
     );
   }
 
+  void showComments() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SizedBox(
+          height: 400,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Comments'),
+            ),
+            body: ListView.separated(
+              itemBuilder: (c, i) {
+                var dateTime = timeago.format(
+                    DateTime.fromMillisecondsSinceEpoch(comments[i].ts));
+                var author = comments[i].author;
+                var upVotesCount =
+                    comments[i].votes.where((e) => e.vt > 0).length;
+                var downVotesCount =
+                    comments[i].votes.where((e) => e.vt < 0).length;
+                var dtc =
+                    '${(comments[i].dist / 100.0).toStringAsFixed(2)} DTC';
+                var subtitle =
+                    '👤 $author · 🗓 $dateTime\n👍 $upVotesCount · 👎 $downVotesCount · $dtc';
+                return ListTile(
+                  contentPadding:
+                      EdgeInsets.only(left: comments[i].level * 25 + 5),
+                  leading: CircleAvatar(
+                    backgroundImage: Image.network(
+                            'https://avalon.d.tube/image/avatar/${comments[i].author}/small')
+                        .image,
+                  ),
+                  title: Text(comments[i].json.description),
+                  subtitle: Text(subtitle),
+                );
+              },
+              separatorBuilder: (c, i) => const Divider(),
+              itemCount: comments.length,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void showUpVotes() {
     var upVotes = votes.where((element) => element.vt > 0).toList();
     showModalBottomSheet(
@@ -225,6 +319,12 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
       array += [
         IconButton(onPressed: showUpVotes, icon: upVoteButton),
         IconButton(onPressed: showDownVotes, icon: downVoteButton),
+      ];
+    }
+
+    if (doWeHaveComments) {
+      array += [
+        IconButton(onPressed: showComments, icon: const Icon(Icons.comment)),
       ];
     }
 

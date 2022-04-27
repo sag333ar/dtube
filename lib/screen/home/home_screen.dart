@@ -1,8 +1,8 @@
 import 'dart:developer';
 
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/screen/details/video_details.dart';
 import 'package:dtube/screen/search/search_screen.dart';
-import 'package:dtube/screen/video_details.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:timeago/timeago.dart' as timeago;

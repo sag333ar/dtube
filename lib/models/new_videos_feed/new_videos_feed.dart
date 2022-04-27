@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dtube/models/new_videos_feed/ipfs_video_details.dart';
 import 'package:dtube/models/new_videos_feed/safe_convert.dart';
+import 'package:dtube/models/new_videos_feed/video_comment.dart';
 
 // final jsonList = json.decode(jsonStr) as List;
 // final list = jsonList.map((e) => NewVideosResponseModelItem.fromJson(e)).toList();
@@ -18,9 +19,11 @@ class NewVideosResponseModelItem {
   final String author;
   final String link;
   final NewVideosResponseModelItemJson jsonObject;
+  final List<List<String>> child;
   final List<NewVideosResponseModelItemVotesItem> votes;
   final int ts;
   final double dist;
+  final List<VideoComment> videoComments;
 
   NewVideosResponseModelItem({
     this.id = "",
@@ -28,23 +31,36 @@ class NewVideosResponseModelItem {
     this.link = "",
     required this.jsonObject,
     required this.votes,
+    required this.child,
+    required this.videoComments,
     this.ts = 0,
     this.dist = 0.0,
   });
 
-  factory NewVideosResponseModelItem.fromJson(Map<String, dynamic>? json) =>
-      NewVideosResponseModelItem(
-        id: asString(json, '_id'),
-        author: asString(json, 'author'),
-        link: asString(json, 'link'),
-        jsonObject:
-            NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
-        votes: asList(json, 'votes')
-            .map((e) => NewVideosResponseModelItemVotesItem.fromJson(e))
-            .toList(),
-        ts: asInt(json, 'ts'),
-        dist: asDouble(json, 'dist'),
-      );
+  factory NewVideosResponseModelItem.fromJson(Map<String, dynamic>? json) {
+    Map<String, dynamic>? comments = json?['comments'];
+    var videoComments = comments?.keys.map((e) {
+          Map<String, dynamic>? comment = comments[e];
+          return VideoComment.fromJson(comment);
+        }).toList() ??
+        [];
+    return NewVideosResponseModelItem(
+      id: asString(json, '_id'),
+      author: asString(json, 'author'),
+      link: asString(json, 'link'),
+      jsonObject: NewVideosResponseModelItemJson.fromJson(asMap(json, 'json')),
+      votes: asList(json, 'votes')
+          .map((e) => NewVideosResponseModelItemVotesItem.fromJson(e))
+          .toList(),
+      child: asList(json, 'child').map((e) {
+        var list = e as List<dynamic>;
+        return list.map((listE) => listE.toString()).toList();
+      }).toList(),
+      videoComments: videoComments,
+      ts: asInt(json, 'ts'),
+      dist: asDouble(json, 'dist'),
+    );
+  }
 
   factory NewVideosResponseModelItem.fromJsonString(String string) =>
       NewVideosResponseModelItem.fromJson(json.decode(string));

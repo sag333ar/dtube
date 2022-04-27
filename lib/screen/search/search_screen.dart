@@ -13,7 +13,6 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // https://search.d.tube/avalon.accounts/_search?q=name:*sagar*&size=50&sort=balance:desc
   var searchTerm = '';
   var isLoading = false;
   List<SearchResponseHitItem> hits = [];
@@ -61,7 +60,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 title: hits[i].source.name,
                 path: 'blog/${hits[i].source.name}',
                 shouldShowDrawer: false);
-            var route = MaterialPageRoute(bu3ilder: (c) => screen);
+            var route = MaterialPageRoute(builder: (c) => screen);
             Navigator.of(context).push(route);
           },
         );
