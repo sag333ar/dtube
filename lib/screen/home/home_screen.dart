@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/screen/auth/login_screen.dart';
 import 'package:dtube/screen/details/video_details.dart';
 import 'package:dtube/screen/search/search_screen.dart';
 import 'package:flutter/material.dart';
@@ -183,9 +184,51 @@ class _HomeWidgetState extends State<HomeWidget> {
     Navigator.of(context).pushReplacement(route);
   }
 
-  Widget _getDrawer() {
+  Widget _drawerHeader(BuildContext context) {
+    return DrawerHeader(
+      child: InkWell(
+        child: Column(
+          children: [
+            Image.asset(
+              "images/dtube_logo.png",
+              width: 60,
+              height: 60,
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "DTube",
+              style: Theme.of(context).textTheme.headline5,
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "sagar.kothari.88",
+              style: Theme.of(context).textTheme.headline6,
+            ),
+          ],
+        ),
+        onTap: () {
+          // var screen = const AboutHomeScreen();
+          // var route = MaterialPageRoute(builder: (_) => screen);
+          // Navigator.of(context).push(route);
+        },
+      ),
+    );
+  }
+
+  Widget _getDrawer(BuildContext context) {
     return ListView(
       children: [
+        _drawerHeader(context),
+        ListTile(
+          leading: const Icon(Icons.person),
+          title: const Text('Login'),
+          onTap: () {
+            Navigator.of(context).pop();
+            var screen = const LoginScreen();
+            var route = MaterialPageRoute(builder: (c) => screen);
+            Navigator.of(context).push(route);
+          },
+        ),
         ListTile(
           leading: const Icon(Icons.local_fire_department),
           title: const Text('Hot Videos'),
@@ -228,7 +271,8 @@ class _HomeWidgetState extends State<HomeWidget> {
         ],
       ),
       body: body(),
-      drawer: widget.shouldShowDrawer ? Drawer(child: _getDrawer()) : null,
+      drawer:
+          widget.shouldShowDrawer ? Drawer(child: _getDrawer(context)) : null,
     );
   }
 }
