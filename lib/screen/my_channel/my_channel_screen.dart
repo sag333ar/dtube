@@ -3,12 +3,13 @@ import 'dart:developer';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/screen/home/drawer.dart';
 import 'package:dtube/screen/home/videos_list.dart';
-import 'package:dtube/screen/search/search_screen.dart';
+import 'package:dtube/server/dtube_app_data.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
-class HomeWidget extends StatefulWidget {
-  const HomeWidget({
+class MyChannelScreen extends StatefulWidget {
+  const MyChannelScreen({
     Key? key,
     required this.title,
     required this.path,
@@ -17,15 +18,14 @@ class HomeWidget extends StatefulWidget {
   final String title;
   final String path;
   final bool shouldShowDrawer;
-
   @override
-  State<HomeWidget> createState() => _HomeWidgetState();
+  State<MyChannelScreen> createState() => _MyChannelScreenState();
 }
 
-class _HomeWidgetState extends State<HomeWidget> {
+class _MyChannelScreenState extends State<MyChannelScreen> {
   Future<List<NewVideosResponseModelItem>> loadNewVideos() async {
-    var request =
-        http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
+    var request = http.Request(
+        'GET', Uri.parse('https://avalon.d.tube/blog/${widget.title}'));
     http.StreamedResponse response = await request.send();
     if (response.statusCode == 200) {
       var responseValue = await response.stream.bytesToString();
@@ -79,17 +79,19 @@ class _HomeWidgetState extends State<HomeWidget> {
         title: Text(widget.title),
         actions: [
           IconButton(
-            onPressed: () {
-              var screen = const SearchScreen();
-              var route = MaterialPageRoute(builder: (c) => screen);
-              Navigator.of(context).push(route);
+            onPressed: () async {
+              const storage = FlutterSecureStorage();
+              await storage.delete(key: 'username');
+              await storage.delete(key: 'key');
+              DTubeAppData.updateUserData(null);
+              Navigator.of(context).pop();
             },
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.logout),
           ),
         ],
       ),
       body: body(),
-      drawer: widget.shouldShowDrawer ? const DTubeDrawer() : null,
+      drawer: const DTubeDrawer(),
     );
   }
 }

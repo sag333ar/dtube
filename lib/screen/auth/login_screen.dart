@@ -1,6 +1,9 @@
 import 'package:dtube/models/auth/login_bridge_response.dart';
+import 'package:dtube/models/auth/user_stream.dart';
+import 'package:dtube/server/dtube_app_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -16,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   var key = '';
 
   // Create storage
-  // final storage = new FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
 
   void onLoginTapped() async {
     setState(() {
@@ -30,6 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
       var response = LoginBridgeResponse.fromJsonString(result);
       if (response.valid && response.error.isEmpty) {
         debugPrint("Successful login");
+        await storage.write(key: 'username', value: username);
+        await storage.write(key: 'key', value: key);
+        DTubeAppData.updateUserData(
+            DTubeUserData(username: username, key: key));
+        Navigator.of(context).pop();
       } else {
         showError(response.error);
       }

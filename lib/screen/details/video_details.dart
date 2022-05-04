@@ -1,13 +1,11 @@
-import 'dart:developer';
-
 import 'package:badges/badges.dart';
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/models/new_videos_feed/video_comment.dart';
 import 'package:dtube/screen/home/home_screen.dart';
+import 'package:dtube/server/dtube_app_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
@@ -97,23 +95,13 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
   }
 
   Future<void> loadVoteInfo() async {
-    var request = http.Request(
-        'GET', Uri.parse('https://avalon.d.tube/content/${widget.item.id}'));
-    http.StreamedResponse response = await request.send();
-    if (response.statusCode == 200) {
-      var responseValue = await response.stream.bytesToString();
-      NewVideosResponseModelItem item =
-          NewVideosResponseModelItem.fromJsonString(responseValue);
-      setState(() {
-        votes = item.votes;
-        comments = refactorComments(item);
-        doWeHaveVotesInfo = true;
-        doWeHaveComments = true;
-      });
-    } else {
-      log(response.reasonPhrase ?? 'Status code not 200');
-      throw response.reasonPhrase ?? 'Status code not 200';
-    }
+    var item = await DTubeAppData.loadContentDetails(widget.item.id);
+    setState(() {
+      votes = item.votes;
+      comments = refactorComments(item);
+      doWeHaveVotesInfo = true;
+      doWeHaveComments = true;
+    });
   }
 
   Widget _player() {

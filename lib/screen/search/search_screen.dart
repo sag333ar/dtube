@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:dtube/models/new_videos_feed/search_response.dart';
 import 'package:dtube/screen/home/home_screen.dart';
+import 'package:dtube/server/dtube_app_data.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -18,28 +18,21 @@ class _SearchScreenState extends State<SearchScreen> {
   List<SearchResponseHitItem> hits = [];
 
   void doSearch() async {
-    var searchText = searchTerm.trim();
-    var url =
-        'https://search.d.tube/avalon.accounts/_search?q=name:*$searchText*&size=50&sort=balance:desc';
-    var request = http.Request('GET', Uri.parse(url));
     setState(() {
       isLoading = true;
     });
-    http.StreamedResponse response = await request.send();
-    if (response.statusCode == 200) {
-      var responseValue = await response.stream.bytesToString();
-      SearchResponse searchResponse =
-          SearchResponse.fromJsonString(responseValue);
+    try {
+      SearchResponse response = await DTubeAppData.doSearch(searchTerm);
       setState(() {
-        hits = searchResponse.hits.hits;
+        hits = response.hits.hits;
         isLoading = false;
       });
-    } else {
-      log(response.reasonPhrase ?? 'Status code not 200');
-      setState(() {
-        isLoading = false;
-      });
+    } catch (e) {
+      log('Error occurred - ${e.toString()}');
     }
+    setState(() {
+      isLoading = false;
+    });
   }
 
   Widget _body() {
