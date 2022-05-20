@@ -1,11 +1,15 @@
 import 'dart:developer';
 
+import 'package:dtube/models/auth/user_stream.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
+import 'package:dtube/models/transaction/transaction_data.dart';
 import 'package:dtube/screen/home/drawer.dart';
 import 'package:dtube/screen/home/videos_list.dart';
 import 'package:dtube/screen/search/search_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({
@@ -23,7 +27,21 @@ class HomeWidget extends StatefulWidget {
 }
 
 class _HomeWidgetState extends State<HomeWidget> {
-  Future<List<NewVideosResponseModelItem>> loadNewVideos() async {
+  var isLoading = false;
+  var hasError = false;
+  List<NewVideosResponseModelItem> items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadNewVideos();
+  }
+
+  void loadNewVideos() async {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+    });
     var request =
         http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
     http.StreamedResponse response = await request.send();
@@ -31,10 +49,17 @@ class _HomeWidgetState extends State<HomeWidget> {
       var responseValue = await response.stream.bytesToString();
       List<NewVideosResponseModelItem> items =
           decodeStringOfVideos(responseValue);
-      return items;
+      setState(() {
+        isLoading = false;
+        hasError = false;
+        this.items = items;
+      });
     } else {
-      log(response.reasonPhrase ?? 'Status code not 200');
-      throw response.reasonPhrase ?? 'Status code not 200';
+      setState(() {
+        isLoading = false;
+        hasError = true;
+        items = [];
+      });
     }
   }
 
@@ -55,21 +80,66 @@ class _HomeWidgetState extends State<HomeWidget> {
   }
 
   Widget body() {
-    return FutureBuilder(
-      future: loadNewVideos(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Text(
-              'An Error occurred. ${snapshot.error?.toString() ?? 'Unknown Error'}');
-        } else if (snapshot.hasData) {
-          return VideosList(
-            list: snapshot.data as List<NewVideosResponseModelItem>,
-          );
-        } else {
-          return loadingIndicator();
-        }
+    if (isLoading) {
+      return loadingIndicator();
+    }
+    if (hasError) {
+      return const Text('An Error occurred.');
+    }
+    if (items.isEmpty) {
+      return const Text('No Data found.');
+    }
+    return VideosList(list: items);
+  }
+
+  void followProcess(String username, String key, String author) async {
+    var jsonString = TransactionData(target: author).toJsonString();
+    const platform = MethodChannel('com.sagar.dtube/transact');
+    setState(() {
+      isLoading = true;
+    });
+    final String result = await platform.invokeMethod('perform', {
+      'username': username,
+      'key': key,
+      'data': jsonString,
+      'type': '7',
+    });
+    // var resultInt = int.tryParse(result);
+    if (result.isNotEmpty) {
+      log('Result is $result');
+    } else {
+      // show some toast here.
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Widget followButton(String username, String key, String author) {
+    return IconButton(
+      onPressed: () {
+        followProcess(username, key, author);
       },
+      icon: const Icon(Icons.add_alert),
     );
+  }
+
+  Widget iconButton() {
+    var user = Provider.of<DTubeUserData?>(context);
+    var username = user?.username;
+    var key = user?.key;
+    var search = IconButton(
+      onPressed: () {
+        var screen = const SearchScreen();
+        var route = MaterialPageRoute(builder: (c) => screen);
+        Navigator.of(context).push(route);
+      },
+      icon: const Icon(Icons.search),
+    );
+    if (username == null || key == null) return search;
+    if (!(widget.path.startsWith("blog/"))) return search;
+    var author = widget.path.replaceAll('blog/', '');
+    return followButton(username, key, author);
   }
 
   @override
@@ -78,14 +148,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          IconButton(
-            onPressed: () {
-              var screen = const SearchScreen();
-              var route = MaterialPageRoute(builder: (c) => screen);
-              Navigator.of(context).push(route);
-            },
-            icon: const Icon(Icons.search),
-          ),
+          iconButton(),
         ],
       ),
       body: body(),

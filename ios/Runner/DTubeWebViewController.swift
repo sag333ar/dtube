@@ -15,6 +15,7 @@ class DTubeWebViewController: UIViewController {
 	var webView: WKWebView?
 	var didFinish = false
 	var postingKeyValidationHandler: ((String) -> Void)?
+	var transactHandler: ((String) -> Void)?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -36,6 +37,19 @@ class DTubeWebViewController: UIViewController {
 		postingKeyValidationHandler = handler
 		OperationQueue.main.addOperation {
 			self.webView?.evaluateJavaScript("validateDTubeKey('\(username)', '\(key)')")
+		}
+	}
+
+	func transact(
+		username: String,
+		key: String,
+		type: String,
+		data: String,
+		handler: @escaping (String) -> Void
+	) {
+		transactHandler = handler
+		OperationQueue.main.addOperation {
+			self.webView?.evaluateJavaScript("sendTransaction('\(username)', '\(key)', \(type), '\(data)')")
 		}
 	}
 }
@@ -65,9 +79,15 @@ extension DTubeWebViewController: WKScriptMessageHandler {
 				else { return }
 				debugPrint("Is it valid? \(isValid ? "TRUE" : "FALSE")")
 				debugPrint("user name is \(username)")
-				debugPrint("key is \(key)")
 				debugPrint("Error is \(error)")
 				postingKeyValidationHandler?(response)
+			case "transact":
+				debugPrint("Dictionary is \(dict)")
+				guard
+					let data = try? JSONSerialization.data(withJSONObject: dict),
+					let string = String(data: data, encoding: .utf8)
+				else { return }
+				transactHandler?(string)
 			default: debugPrint("Do nothing here.")
 		}
 	}

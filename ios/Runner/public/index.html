@@ -1,53 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="theme-color" content="#000000" />
-		<meta name="description" content="Sagar DTube" />
-		<title>Sagar DTube</title>
-	</head>
-	<body>
-		<noscript>You need to enable JavaScript to run this app.</noscript>
-		<script src="https://unpkg.com/javalon/bin/javalon.min.js"></script>
-		<script>
-			function validateDTubeKey(username, key) {
-				javalon.getAccount(username, (err, account) => {
-						if (err != null) {
-							console.log('ERRORRRR Error: ', err)
-							window.webkit.messageHandlers.dtube.postMessage({
-								type: 'validateDTubeKey',
-								valid: false,
-								username: username,
-								key: key,
-								error: err.message,
-							});
-						} else {
-							var keyPub = javalon.privToPub(key);
-							console.log('Public key from private key is ', keyPub);
-							var accountPubKeys = account.keys.map(function(e){return e.pub;});
-							console.log('accountPubKeys are ', accountPubKeys);
-							if (account.pub == keyPub || accountPubKeys.includes(keyPub)) {
-								console.log('valid key ', keyPub);
-								window.webkit.messageHandlers.dtube.postMessage({
-									type: 'validateDTubeKey',
-									valid: true,
-									username: username,
-									key: key,
-									error: '',
-								});
-							} else {
-								window.webkit.messageHandlers.dtube.postMessage({
-									type: 'validateDTubeKey',
-									valid: false,
-									username: username,
-									key: key,
-									error: 'Invalid Key',
-								});
-							}
-						}
-				})
-			}
-		</script>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Sagar DTube" />
+    <title>Sagar DTube</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script src="https://unpkg.com/javalon/bin/javalon.min.js"></script>
+    <script>
+      function validateDTubeKey(username, key) {
+        javalon.getAccount(username, (err, account) => {
+          if (err != null) {
+            console.log("ERRORRRR Error: ", err);
+            window.webkit.messageHandlers.dtube.postMessage({
+              type: "validateDTubeKey",
+              valid: false,
+              username: username,
+              key: key,
+              error: err.message,
+            });
+          } else {
+            var keyPub = javalon.privToPub(key);
+            console.log("Public key from private key is ", keyPub);
+            var accountPubKeys = account.keys.map(function (e) {
+              return e.pub;
+            });
+            console.log("accountPubKeys are ", accountPubKeys);
+            if (account.pub == keyPub || accountPubKeys.includes(keyPub)) {
+              console.log("valid key ", keyPub);
+              window.webkit.messageHandlers.dtube.postMessage({
+                type: "validateDTubeKey",
+                valid: true,
+                username: username,
+                key: key,
+                error: "",
+              });
+            } else {
+              window.webkit.messageHandlers.dtube.postMessage({
+                type: "validateDTubeKey",
+                valid: false,
+                username: username,
+                key: key,
+                error: "Invalid Key",
+              });
+            }
+          }
+        });
+      }
+
+      function sendTransaction(username, key, type, data) {
+				console.log(`data is ${data}`);
+				console.log(`type is ${type}`);
+				console.log(`username is ${username}`);
+        var jsonObject = JSON.parse(data);
+				console.log(`jsonObject is ${jsonObject} - ${JSON.stringify(jsonObject)} `);
+        var newTx = { type: type, data: jsonObject };
+				console.log(`newTx is ${newTx} ${JSON.stringify(newTx)} `);
+        newTx = javalon.sign(key, username, newTx);
+				console.log(`signed newTx is ${newTx} ${JSON.stringify(newTx)} `);
+        javalon.sendTransaction(newTx, function (err, res) {
+					console.log(`sendTransaction: ${err}`);
+					console.log(`sendTransaction: ${res}`);
+          window.webkit.messageHandlers.dtube.postMessage({
+            type: "transact",
+						err: err,
+            result: res,
+          });
+        });
+      }
+    </script>
+  </body>
 </html>

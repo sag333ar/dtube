@@ -1,5 +1,5 @@
 //
-//  ValidateHiveKeyResponse.swift
+//  ValidateDTubeKeyResponse.swift
 //  Runner
 //
 //  Created by Sagar on 02/05/22.

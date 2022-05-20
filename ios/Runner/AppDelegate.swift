@@ -5,6 +5,7 @@ import Flutter
 @objc class AppDelegate: FlutterAppDelegate {
 	var dtube: DTubeWebViewController?
 	let authBridge = AuthBridge()
+	let transactBridge = TransactBridge()
 
 	override func application(
 		_ application: UIApplication,
@@ -15,6 +16,7 @@ import Flutter
 
 		let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
 		authBridge.initiate(controller: controller, window: window, dtube: dtube)
+		transactBridge.initiate(controller: controller, window: window, dtube: dtube)
 
 		GeneratedPluginRegistrant.register(with: self)
 		return super.application(application, didFinishLaunchingWithOptions: launchOptions)

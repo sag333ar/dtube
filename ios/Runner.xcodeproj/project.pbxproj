@@ -8,9 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1BA8A90E2837339B002650BC /* TransactBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA8A90D2837339B002650BC /* TransactBridge.swift */; };
 		1BFDDDCA2820AFDC004E51DD /* public in Resources */ = {isa = PBXBuildFile; fileRef = 1BFDDDC92820AFDC004E51DD /* public */; };
 		1BFDDDCC2820B149004E51DD /* DTubeWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFDDDCB2820B149004E51DD /* DTubeWebViewController.swift */; };
-		1BFDDDD12820B18F004E51DD /* ValidateHiveKeyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFDDDCF2820B18F004E51DD /* ValidateHiveKeyResponse.swift */; };
+		1BFDDDD12820B18F004E51DD /* ValidateDTubeKeyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFDDDCF2820B18F004E51DD /* ValidateDTubeKeyResponse.swift */; };
 		1BFDDDD22820B18F004E51DD /* AuthBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFDDDD02820B18F004E51DD /* AuthBridge.swift */; };
 		359EE0CE76BBE87D68462BE3 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4AF7D738FB1C7863F183949 /* Pods_Runner.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
@@ -36,9 +37,10 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1BA8A90D2837339B002650BC /* TransactBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactBridge.swift; sourceTree = "<group>"; };
 		1BFDDDC92820AFDC004E51DD /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		1BFDDDCB2820B149004E51DD /* DTubeWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DTubeWebViewController.swift; sourceTree = "<group>"; };
-		1BFDDDCF2820B18F004E51DD /* ValidateHiveKeyResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidateHiveKeyResponse.swift; sourceTree = "<group>"; };
+		1BFDDDCF2820B18F004E51DD /* ValidateDTubeKeyResponse.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidateDTubeKeyResponse.swift; sourceTree = "<group>"; };
 		1BFDDDD02820B18F004E51DD /* AuthBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthBridge.swift; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		64BE2D76E594055205504303 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
@@ -79,9 +81,18 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		1BA8A90C2837338C002650BC /* Transact */ = {
+			isa = PBXGroup;
+			children = (
+				1BA8A90D2837339B002650BC /* TransactBridge.swift */,
+			);
+			path = Transact;
+			sourceTree = "<group>";
+		};
 		1BFDDDCD2820B18F004E51DD /* Bridges */ = {
 			isa = PBXGroup;
 			children = (
+				1BA8A90C2837338C002650BC /* Transact */,
 				1BFDDDCE2820B18F004E51DD /* Auth */,
 			);
 			path = Bridges;
@@ -90,7 +101,7 @@
 		1BFDDDCE2820B18F004E51DD /* Auth */ = {
 			isa = PBXGroup;
 			children = (
-				1BFDDDCF2820B18F004E51DD /* ValidateHiveKeyResponse.swift */,
+				1BFDDDCF2820B18F004E51DD /* ValidateDTubeKeyResponse.swift */,
 				1BFDDDD02820B18F004E51DD /* AuthBridge.swift */,
 			);
 			path = Auth;
@@ -302,7 +313,8 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
-				1BFDDDD12820B18F004E51DD /* ValidateHiveKeyResponse.swift in Sources */,
+				1BA8A90E2837339B002650BC /* TransactBridge.swift in Sources */,
+				1BFDDDD12820B18F004E51DD /* ValidateDTubeKeyResponse.swift in Sources */,
 				1BFDDDD22820B18F004E51DD /* AuthBridge.swift in Sources */,
 				1BFDDDCC2820B149004E51DD /* DTubeWebViewController.swift in Sources */,
 			);
