@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dtube/models/auth/user_stream.dart';
@@ -28,20 +29,11 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   var isLoading = false;
-  var hasError = false;
-  List<NewVideosResponseModelItem> items = [];
+  Future<List<NewVideosResponseModelItem>>? _future;
+  Future<List<String>>? _futureFollows;
 
-  @override
-  void initState() {
-    super.initState();
-    loadNewVideos();
-  }
-
-  void loadNewVideos() async {
-    setState(() {
-      isLoading = true;
-      hasError = false;
-    });
+  Future<List<NewVideosResponseModelItem>> loadNewVideos(
+      DTubeUserData? user) async {
     var request =
         http.Request('GET', Uri.parse('https://avalon.d.tube/${widget.path}'));
     http.StreamedResponse response = await request.send();
@@ -49,17 +41,30 @@ class _HomeWidgetState extends State<HomeWidget> {
       var responseValue = await response.stream.bytesToString();
       List<NewVideosResponseModelItem> items =
           decodeStringOfVideos(responseValue);
-      setState(() {
-        isLoading = false;
-        hasError = false;
-        this.items = items;
-      });
+      return items;
     } else {
-      setState(() {
-        isLoading = false;
-        hasError = true;
-        items = [];
-      });
+      log(response.reasonPhrase ?? 'Status code not 200');
+      throw response.reasonPhrase ?? 'Status code not 200';
+    }
+  }
+
+  Future<List<String>> getFollows(DTubeUserData? user) async {
+    var user = Provider.of<DTubeUserData?>(context, listen: false);
+    var username = user?.username;
+    var key = user?.key;
+    if (username != null && key != null && !widget.path.startsWith('blog/')) {
+      return [];
+    }
+    var request = http.Request(
+        'GET', Uri.parse('https://avalon.d.tube/follows/${username!}'));
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      var responseValue = await response.stream.bytesToString();
+      var list = json.decode(responseValue) as List<dynamic>;
+      List<String> items = list.map((listE) => listE.toString()).toList();
+      return items;
+    } else {
+      throw 'Something went wrong while loading follows';
     }
   }
 
@@ -79,79 +84,115 @@ class _HomeWidgetState extends State<HomeWidget> {
     );
   }
 
-  Widget body() {
-    if (isLoading) {
-      return loadingIndicator();
+  Widget body(DTubeUserData? user) {
+    if (_future == null) {
+      _future = loadNewVideos(user);
     }
-    if (hasError) {
-      return const Text('An Error occurred.');
-    }
-    if (items.isEmpty) {
-      return const Text('No Data found.');
-    }
-    return VideosList(list: items);
+    return FutureBuilder(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text(
+              'An Error occurred. ${snapshot.error?.toString() ?? 'Unknown Error'}');
+        } else if (snapshot.hasData) {
+          return VideosList(
+            list: snapshot.data as List<NewVideosResponseModelItem>,
+          );
+        } else {
+          return loadingIndicator();
+        }
+      },
+    );
   }
 
-  void followProcess(String username, String key, String author) async {
+  void followProcess(
+      List<String> follows, String author, DTubeUserData user) async {
     var jsonString = TransactionData(target: author).toJsonString();
     const platform = MethodChannel('com.sagar.dtube/transact');
     setState(() {
       isLoading = true;
     });
     final String result = await platform.invokeMethod('perform', {
-      'username': username,
-      'key': key,
+      'username': user.username,
+      'key': user.key,
       'data': jsonString,
-      'type': '7',
+      'type': follows.contains(author) ? '8' : '7',
     });
-    // var resultInt = int.tryParse(result);
-    if (result.isNotEmpty) {
-      log('Result is $result');
+    var txResult = TransactionResult.fromJsonString(result);
+    if (txResult.err?.error != null && txResult.err?.error.isNotEmpty == true) {
+      var snackBar = SnackBar(content: Text('Error: ${txResult.err!.error}'));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     } else {
-      // show some toast here.
+      var text = follows.contains(author)
+          ? 'You\'ve unfollowed $author'
+          : 'You are now following $author';
+      var snackBar = SnackBar(content: Text(text));
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     }
     setState(() {
+      _futureFollows = _futureFollows = getFollows(user);
       isLoading = false;
     });
   }
 
-  Widget followButton(String username, String key, String author) {
-    return IconButton(
-      onPressed: () {
-        followProcess(username, key, author);
+  Widget followButton(String author, DTubeUserData user) {
+    return FutureBuilder(
+      future: _futureFollows,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const CircularProgressIndicator();
+        }
+        if (snapshot.hasError) {
+          return const SizedBox(width: 5);
+        }
+        if (snapshot.hasData) {
+          var follows = snapshot.data as List<String>;
+          return IconButton(
+            onPressed: () async {
+              followProcess(follows, author, user);
+            },
+            icon: Icon(follows.contains(author)
+                ? Icons.person_remove_alt_1
+                : Icons.person_add_alt_1),
+          );
+        }
+        return const SizedBox(width: 5);
       },
-      icon: const Icon(Icons.add_alert),
     );
   }
 
-  Widget iconButton() {
-    var user = Provider.of<DTubeUserData?>(context);
-    var username = user?.username;
-    var key = user?.key;
-    var search = IconButton(
-      onPressed: () {
-        var screen = const SearchScreen();
-        var route = MaterialPageRoute(builder: (c) => screen);
-        Navigator.of(context).push(route);
-      },
-      icon: const Icon(Icons.search),
-    );
-    if (username == null || key == null) return search;
-    if (!(widget.path.startsWith("blog/"))) return search;
+  List<Widget> actions(DTubeUserData? user) {
+    if (isLoading) return [const CircularProgressIndicator()];
+    if (user?.username == null ||
+        user?.key == null ||
+        !(widget.path.startsWith("blog/"))) {
+      return [
+        IconButton(
+          onPressed: () {
+            var screen = const SearchScreen();
+            var route = MaterialPageRoute(builder: (c) => screen);
+            Navigator.of(context).push(route);
+          },
+          icon: const Icon(Icons.search),
+        )
+      ];
+    }
     var author = widget.path.replaceAll('blog/', '');
-    return followButton(username, key, author);
+    return [followButton(author, user!)];
   }
 
   @override
   Widget build(BuildContext context) {
+    var user = Provider.of<DTubeUserData?>(context);
+    if (_futureFollows == null) {
+      _futureFollows = getFollows(user);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        actions: [
-          iconButton(),
-        ],
+        actions: actions(user),
       ),
-      body: body(),
+      body: body(user),
       drawer: widget.shouldShowDrawer ? const DTubeDrawer() : null,
     );
   }

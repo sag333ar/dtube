@@ -15,6 +15,7 @@ class DTubeApp extends StatefulWidget {
 class _DTubeAppState extends State<DTubeApp> {
   // Create storage
   final storage = const FlutterSecureStorage();
+  var isLoading = true;
 
   @override
   void initState() {
@@ -23,6 +24,9 @@ class _DTubeAppState extends State<DTubeApp> {
   }
 
   void loadData() async {
+    setState(() {
+      isLoading = true;
+    });
     String? username = await storage.read(key: 'username');
     String? key = await storage.read(key: 'key');
     if (username != null &&
@@ -31,6 +35,20 @@ class _DTubeAppState extends State<DTubeApp> {
         key.isNotEmpty) {
       DTubeAppData.updateUserData(DTubeUserData(username: username, key: key));
     }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Widget _loadingData() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('D.tube'),
+      ),
+      body: const Center(
+        child: Text('Loading Data'),
+      ),
+    );
   }
 
   @override
@@ -38,14 +56,16 @@ class _DTubeAppState extends State<DTubeApp> {
     return StreamProvider<DTubeUserData?>.value(
       value: DTubeAppData.userData,
       initialData: null,
-      child: const MaterialApp(
+      child: MaterialApp(
         title: 'D.tube',
         debugShowCheckedModeBanner: false,
-        home: HomeWidget(
-          title: 'New Videos',
-          path: 'new',
-          shouldShowDrawer: true,
-        ),
+        home: isLoading
+            ? _loadingData()
+            : const HomeWidget(
+                title: 'New Videos',
+                path: 'new',
+                shouldShowDrawer: true,
+              ),
       ),
     );
   }
