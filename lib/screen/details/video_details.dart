@@ -2,11 +2,11 @@ import 'package:badges/badges.dart';
 import 'package:better_player/better_player.dart';
 import 'package:dtube/models/new_videos_feed/new_videos_feed.dart';
 import 'package:dtube/models/new_videos_feed/video_comment.dart';
+import 'package:dtube/screen/details/votes_container.dart';
 import 'package:dtube/screen/home/home_screen.dart';
 import 'package:dtube/server/dtube_app_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
@@ -120,65 +120,14 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
             : Container();
   }
 
-  Widget votesList(List<NewVideosResponseModelItemVotesItem> votes) {
-    if (votes.isEmpty) {
-      return const Center(
-        child: Text('Nothing to show.'),
-      );
-    }
-    votes.sort((a, b) => a.vt > b.vt
-        ? -1
-        : a.vt < b.vt
-            ? 1
-            : 0);
-    var formatter = NumberFormat.compact();
-    return Container(
-      margin: const EdgeInsets.only(top: 55),
-      child: ListView.separated(
-        itemBuilder: (c, i) {
-          var dateTime =
-              timeago.format(DateTime.fromMillisecondsSinceEpoch(votes[i].ts));
-          return ListTile(
-            contentPadding:
-                const EdgeInsets.only(left: 10, right: 10, bottom: 5, top: 5),
-            leading: CircleAvatar(
-              backgroundImage: Image.network(
-                      'https://avalon.d.tube/image/avatar/${votes[i].u}/small')
-                  .image,
-            ),
-            title:
-                Text(votes[i].u, style: Theme.of(context).textTheme.bodyLarge),
-            subtitle: Text('${formatter.format(votes[i].vt)} votes\n$dateTime'),
-            trailing: Text(
-              '${(votes[i].claimable / 100.0).toStringAsFixed(2)} DTC',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          );
-        },
-        separatorBuilder: (c, i) => const Divider(height: 0),
-        itemCount: votes.length,
-      ),
-    );
-  }
-
   void showDownVotes() {
     var downVotes = votes.where((element) => element.vt <= 0).toList();
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 400,
-          child: Stack(
-            children: [
-              SizedBox(
-                height: 55,
-                child: AppBar(
-                  title: const Text('Down voted by following users'),
-                ),
-              ),
-              votesList(downVotes),
-            ],
-          ),
+        return VotesContainer(
+          title: 'Down votes',
+          votes: downVotes,
         );
       },
     );
@@ -233,19 +182,9 @@ class _VideoDetailsScreenState extends State<VideoDetailsScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return SizedBox(
-          height: 400,
-          child: Stack(
-            children: [
-              SizedBox(
-                height: 55,
-                child: AppBar(
-                  title: const Text('Up voted by following users'),
-                ),
-              ),
-              votesList(upVotes),
-            ],
-          ),
+        return VotesContainer(
+          title: 'Up votes',
+          votes: upVotes,
         );
       },
     );
